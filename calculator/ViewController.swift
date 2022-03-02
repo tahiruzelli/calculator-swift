@@ -37,9 +37,14 @@ class ViewController: UIViewController {
     let myField = UILabel()
     
     var buttonHeight : Double?
+    
+    var separatedNumbers : Array<String>?
+    var separetedOperators: Array<String>?
+    var summary : Double = 0
+    var myTextArray : Array<String>?
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        separetedOperators = []
         screenWidth = view.frame.width
         screenHeight = view.frame.height
         buttonHeight = screenWidth!/4
@@ -183,23 +188,82 @@ class ViewController: UIViewController {
     }
     
     @objc func onCalculateButtonPressed(){
-        print("")
+        splitText()
+        calculate()
+        print(summary)
+
+    }
+    func calculate(){
+        //myTextArray = Array(myField.text!)!
+        var index = 0
+        while hasOperator()  {
+            if(myTextArray![index]=="+"){
+                summary += Double(sum(num1: Int(separatedNumbers![index])!, num2:Int(separatedNumbers![index+1])!))
+                myTextArray!.remove(at: index-1)
+                myTextArray!.remove(at: index)
+                myTextArray!.remove(at: index+1)
+                myTextArray!.insert(String(summary), at: index - 1)
+            }
+           else if(myTextArray![index]=="×"){
+               if(index == 1){
+                   summary = 1
+               }
+               summary *= Double(times(num1: Int(separatedNumbers![index])!, num2:Int(separatedNumbers![index+1])!))
+               myTextArray!.remove(at: index+1)
+               myTextArray!.remove(at: index)
+               myTextArray!.remove(at: index-1)
+               
+               
+           }
+            else if(myTextArray![index]=="÷"){
+                if(index == 1){
+                    summary = 1
+                }
+                summary /= Double(divide(num1: Int(separatedNumbers![index])!, num2:Int(separatedNumbers![index+1])!))
+                myTextArray!.remove(at: index-1)
+                myTextArray!.remove(at: index)
+                myTextArray!.remove(at: index+1)
+            }
+            else if(myTextArray![index]=="-"){
+                summary -= Double(minus(num1: Int(separatedNumbers![index])!, num2:Int(separatedNumbers![index+1])!))
+                myTextArray!.remove(at: index-1)
+                myTextArray!.remove(at: index)
+                myTextArray!.remove(at: index+1)
+            }
+      
+            index += 1
+        }
+    }
+    func hasOperator()->Bool {
+        var tmp : Bool = false
+        for char in myTextArray!{
+            if(char == "+" || char == "-" || char == "÷" || char == "×"){
+                tmp = true
+            }
+        }
+        return tmp
     }
     @objc func onClearButtonPressed(){
         myField.text = ""
+        separatedNumbers = []
+        separetedOperators = []
+        summary = 0
+
+        
     }
     @objc func onDivideButtonPressed(){
-        myField.text! += "÷"
+     chechOperators(operatorChar: "÷")
+        
     }
     @objc func onTimesButtonPressed(){
-        myField.text! += "×"
+      chechOperators(operatorChar: "×")
     }
     @objc func onSumButtonPressed(){
-        myField.text! += "+"
+     chechOperators(operatorChar: "+")
     }
     
     @objc func onMinusButtonPressed(){
-        myField.text! += "-"
+       chechOperators(operatorChar: "-")
     }
     @objc func onBackSpaceButtonPressed(){
     
@@ -207,7 +271,76 @@ class ViewController: UIViewController {
             myField.text!.remove(at: myField.text!.index(before: myField.text!.endIndex))
         }
     }
+    func hasPriortyOperator()->Bool{
+        var tmp : Bool = false
+        for i in 0 ... separetedOperators!.count-1{
+            if(separetedOperators![i]=="×"||separetedOperators![i]=="÷"){
+                tmp = true
+            }
+        }
+        return tmp
+    }
+    func sortArrays(){
+        var tmpArray: Array<Int>?
+        tmpArray = []
+        for i in  0 ... separetedOperators!.count-1{
+            if(separetedOperators![i]=="+"){
+                let tmp : String
+                tmp = separetedOperators![i]
+                tmpArray?.append(i)
+                separetedOperators?.append(tmp)
+                
+            }
+            else  if(separetedOperators![i]=="-"){
+                let tmp : String
+                tmp = separetedOperators![i]
+                tmpArray?.append(i)
+                separetedOperators?.append(tmp)
+                
+            }
+            
+        }
+        if(tmpArray!.count>0){
+            for i in 0 ... tmpArray!.count-1{
+                separetedOperators?.remove(at: tmpArray![i]-i)
+            }
+        }
+    }
+    func chechOperators(operatorChar : String){
+        
+        let myTextArray : Array = Array(myField.text!)
+        if(myTextArray[myTextArray.endIndex-1]=="+"||myTextArray[myTextArray.endIndex-1]=="-"||myTextArray[myTextArray.endIndex-1]=="÷"||myTextArray[myTextArray.endIndex-1]=="×"){
+            myField.text! = String(myField.text!.dropLast())
+            myField.text! += operatorChar
+
+        }
+        else{
+            myField.text! += operatorChar
+        }
+    }
+    func splitText(){
+        separatedNumbers = myField.text!.components(separatedBy: CharacterSet(charactersIn: "+-×÷"))
+        for char in myField.text!{
+            if(char == "+"||char=="-"||char=="×"||char=="÷"){
+                
+                separetedOperators!.append(String(char))
+                
+            }
+        }
+    }
     
+    func sum(num1 : Int,num2: Int)-> Int{
+        return num1 + num2
+    }
+    func times(num1 : Int,num2: Int)->Int{
+        return num1 * num2
+    }
+    func divide(num1 : Int,num2: Int)->Int{
+        return num1 / num2
+    }
+    func minus(num1 : Int,num2: Int)->Int{
+        return num1 - num2
+    }
 }
 
 
